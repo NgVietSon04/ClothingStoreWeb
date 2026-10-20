@@ -1,0 +1,98 @@
+@model PagedList<Wishlist>
+@{
+    ViewData["Title"] = "Thống kê & Quản lý Yêu thích";
+    var categories = ViewBag.Categories as List<ClothingStoreWeb.Models.Category> ?? new();
+    var products = ViewBag.AllProducts as List<ClothingStoreWeb.Models.Product> ?? new();
+    var wishCounts = ViewBag.ProductWishlistCounts as Dictionary<string, int> ?? new();
+}
+
+<div class="page-head mb-4">
+    <div>
+        <h1><i class="bi bi-heart-fill text-danger"></i> Thống Kê & Quản Lý Yêu Thích</h1>
+        <p class="text-muted mb-0">Tổng lượt thả tim toàn hệ thống</p>
+    </div>
+</div>
+
+<!-- THỐNG KÊ LƯỢT YÊU THÍCH THEO DANH MỤC & SẢN PHẨM -->
+<div class="row mb-4">
+    @foreach (var cat in categories)
+    {
+        var catProducts = products.Where(p => p.CategoryId == cat.CategoryId).ToList();
+        var catTotalLikes = catProducts.Sum(p => wishCounts.ContainsKey(p.ProductId) ? wishCounts[p.ProductId] : 0);
+
+        <div class="col-lg-4 col-md-6 mb-3">
+            <div class="card h-100 shadow-sm border-0">
+                <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 font-weight-bold text-dark">@cat.CategoryName</h5>
+                    <span class="badge bg-danger text-white rounded-pill">🔥 @catTotalLikes lượt thích</span>
+                </div>
+                <div class="card-body p-2" style="max-height: 250px; overflow-y: auto;">
+                    @if (catProducts.Any())
+                    {
+                        <ul class="list-group list-group-flush small">
+                            @foreach (var prod in catProducts)
+                            {
+                                int likes = wishCounts.ContainsKey(prod.ProductId) ? wishCounts[prod.ProductId] : 0;
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-2 py-1">
+                                    <span class="text-truncate" style="max-width: 180px;" title="@prod.ProductName">@prod.ProductName</span>
+                                    <span class="badge @(likes > 0 ? "bg-success" : "bg-secondary") text-white">@likes lượt</span>
+                                </li>
+                            }
+                        </ul>
+                    }
+                    else
+                    {
+                        <p class="text-muted text-center small my-2">Chưa có sản phẩm nào trong danh mục này.</p>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+<!-- BẢNG CHI TIẾT KHÁCH HÀNG THẢ TIM -->
+<div class="card shadow-sm border-0">
+    <div class="card-header bg-white py-3">
+        <h5 class="mb-0 font-weight-bold">Chi Tiết Khách Hàng Thả Tim</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-5"><input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm theo mã khách hàng, sản phẩm..." /></div>
+            <div class="col-auto"><button class="btn btn-outline-secondary"><i class="bi bi-search"></i> Tìm kiếm</button></div>
+        </form>
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Khách hàng</th>
+                        <th>Sản phẩm yêu thích</th>
+                        <th>Ngày thêm</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var w in Model.Items)
+                    {
+                        <tr>
+                            <td><strong>@w.CustomerId</strong> - @w.Customer?.FullName</td>
+                            <td><strong>@w.ProductId</strong> - @w.Product?.ProductName</td>
+                            <td>@w.AddedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">
+                                <form asp-action="Delete" method="post" class="m-0" onsubmit="return confirm('Xóa khỏi danh sách yêu thích?')">
+                                    <input type="hidden" name="customerId" value="@w.CustomerId" />
+                                    <input type="hidden" name="productId" value="@w.ProductId" />
+                                    <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i> Xóa</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Items.Any())
+                    {
+                        <tr><td colspan="4" class="text-center text-muted py-4">Chưa có dữ liệu thả tim nào.</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pager" model="Model" />
+    </div>
+</div>

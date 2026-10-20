@@ -1,0 +1,248 @@
+﻿@addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
+@using ClothingStoreWeb.Services
+@using Microsoft.Extensions.Options
+@inject IOptions<ShopSettings> ShopOptions
+@{
+    var shop = ShopOptions?.Value;
+
+    // View con (Login.cshtml) set ViewData["AuthTab"] = "login" | "register"
+    var activeTab = ViewData["AuthTab"]?.ToString() == "register" ? "register" : "login";
+}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@ViewData["Title"] - @(shop?.Name ?? "Shop")</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
+
+    <!-- CSS Styles -->
+    <link rel="stylesheet" href="~/LayoutUser/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/style.css" type="text/css">
+
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: "Cairo", sans-serif;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 30px 15px;
+        }
+
+        .auth-container {
+            width: 100%;
+            max-width: 480px;
+            padding: 35px 30px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06);
+        }
+
+        .auth-logo {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+
+            .auth-logo img {
+                max-height: 50px;
+            }
+
+        /* ----- TOGGLE SWITCH ĐĂNG NHẬP / ĐĂNG KÝ ----- */
+        .auth-toggle-wrapper {
+            background-color: #f1f5f9;
+            border-radius: 30px;
+            padding: 4px;
+            display: flex;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .auth-toggle-btn {
+            flex: 1;
+            text-align: center;
+            padding: 10px 15px;
+            font-weight: 700;
+            font-size: 15px;
+            color: #64748b;
+            text-decoration: none !important;
+            border-radius: 25px;
+            transition: all 0.3s ease-in-out;
+            cursor: pointer;
+            border: none;
+            background: transparent;
+            display: block;
+            outline: none;
+        }
+
+            .auth-toggle-btn:hover {
+                color: #7fad39;
+            }
+
+            .auth-toggle-btn.active {
+                background-color: #ffffff;
+                color: #7fad39;
+                box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+            }
+
+        /* ----- CHUYỂN QUA LẠI GIỮA 2 FORM ----- */
+        .auth-pane {
+            display: none;
+        }
+
+            .auth-pane.active {
+                display: block;
+                animation: authFade 0.25s ease-in-out;
+            }
+
+        @@keyframes authFade {
+            from {
+                opacity: 0;
+                transform: translateY(6px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ----- FORM INPUT ----- */
+        .auth-container .form-group label {
+            font-weight: 700;
+            color: #333333;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .auth-container .input-group-text {
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-right: none;
+            color: #64748b;
+            border-top-left-radius: 8px;
+            border-bottom-left-radius: 8px;
+        }
+
+        .auth-container .form-control {
+            height: 46px;
+            background-color: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-left: none;
+            border-top-right-radius: 8px;
+            border-bottom-right-radius: 8px;
+            font-size: 14px;
+            color: #333333;
+        }
+
+            .auth-container .form-control:focus {
+                background-color: #ffffff;
+                border-color: #7fad39;
+                box-shadow: none;
+            }
+
+        .auth-container .btn-primary,
+        .auth-container .site-btn {
+            background-color: #7fad39;
+            border-color: #7fad39;
+            color: #ffffff;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            height: 46px;
+            border-radius: 8px;
+            transition: all 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+            .auth-container .btn-primary:hover,
+            .auth-container .site-btn:hover {
+                background-color: #6b962e;
+                border-color: #6b962e;
+            }
+
+        .auth-back {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 14px;
+        }
+
+            .auth-back a {
+                color: #64748b;
+                text-decoration: none;
+                font-weight: 600;
+                transition: color 0.3s;
+            }
+
+                .auth-back a:hover {
+                    color: #7fad39;
+                }
+    </style>
+</head>
+<body>
+
+    <div class="auth-container">
+        <!-- Logo -->
+        <div class="auth-logo">
+            <a asp-controller="Home" asp-action="Index">
+                <img src="~/LayoutUser/img/logo.png" alt="@(shop?.Name ?? "Shop")">
+            </a>
+        </div>
+
+        <!-- Toggle Đăng Nhập / Đăng Ký (chuyển form bằng JS, không tải lại trang) -->
+        <div class="auth-toggle-wrapper" role="tablist">
+            <button type="button" class="auth-toggle-btn @(activeTab == "login" ? "active" : "")"
+                    data-auth-tab="login" role="tab">
+                Đăng Nhập
+            </button>
+            <button type="button" class="auth-toggle-btn @(activeTab == "register" ? "active" : "")"
+                    data-auth-tab="register" role="tab">
+                Đăng Ký
+            </button>
+        </div>
+
+        <!-- Nội dung View chính -->
+        @RenderBody()
+
+        <!-- Nút quay về -->
+        <div class="auth-back">
+            <a asp-controller="Home" asp-action="Index">
+                <i class="fa fa-arrow-left"></i> Quay về trang chủ
+            </a>
+        </div>
+    </div>
+
+    <script src="~/LayoutUser/js/jquery-3.3.1.min.js"></script>
+    <script src="~/LayoutUser/js/bootstrap.min.js"></script>
+    <script>
+        (function () {
+            var buttons = document.querySelectorAll('.auth-toggle-btn');
+            var panes = document.querySelectorAll('.auth-pane');
+
+            function showTab(tab) {
+                buttons.forEach(function (b) {
+                    b.classList.toggle('active', b.getAttribute('data-auth-tab') === tab);
+                });
+                panes.forEach(function (p) {
+                    p.classList.toggle('active', p.getAttribute('data-auth-pane') === tab);
+                });
+            }
+
+            buttons.forEach(function (b) {
+                b.addEventListener('click', function () {
+                    showTab(b.getAttribute('data-auth-tab'));
+                });
+            });
+
+            showTab('@activeTab');
+        })();
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

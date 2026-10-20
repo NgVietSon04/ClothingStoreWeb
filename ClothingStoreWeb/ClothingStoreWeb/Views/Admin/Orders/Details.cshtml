@@ -1,0 +1,49 @@
+@model Order
+@{
+    ViewData["Title"] = "Đơn hàng " + Model.OrderId;
+    var sub = Model.OrderDetails.Sum(d => (d.Quantity ?? 0) * (d.UnitPrice ?? 0) * (decimal)(1 - (d.Discount ?? 0) / 100.0));
+}
+<div class="page-head">
+    <h1><i class="bi bi-receipt"></i> Đơn hàng @Model.OrderId</h1>
+    <div class="d-flex gap-2 no-print">
+        <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Danh sách</a>
+        <button class="btn btn-outline-secondary" onclick="window.print()"><i class="bi bi-printer"></i> In</button>
+        <a asp-action="Edit" asp-route-id="@Model.OrderId" class="btn btn-primary"><i class="bi bi-pencil"></i> Sửa</a>
+    </div>
+</div>
+<div class="card mb-3"><div class="card-body">
+    <dl class="row mb-0">
+        <dt class="col-sm-3">Ngày đặt</dt><dd class="col-sm-9">@Model.OrderDate?.ToString("dd/MM/yyyy HH:mm")</dd>
+        <dt class="col-sm-3">Khách hàng</dt><dd class="col-sm-9">@(Model.Customer != null ? Model.CustomerId + " - " + Model.Customer.FullName : "Khách lẻ")</dd>
+        <dt class="col-sm-3">Nhân viên</dt><dd class="col-sm-9">@Model.Employee?.FullName</dd>
+        <dt class="col-sm-3">Thanh toán</dt><dd class="col-sm-9">@AdminUi.Payment(Model.PaymentMethod)</dd>
+        <dt class="col-sm-3">Mã số thuế</dt><dd class="col-sm-9">@Model.TaxCode</dd>
+        <dt class="col-sm-3">Thông tin thuế</dt><dd class="col-sm-9">@Model.TaxInfo</dd>
+        <dt class="col-sm-3">Ghi chú</dt><dd class="col-sm-9">@Model.Notes</dd>
+    </dl>
+</div></div>
+<div class="card"><div class="table-responsive">
+    <table class="table mb-0 align-middle">
+        <thead><tr><th>Sản phẩm</th><th>Biến thể</th><th class="text-end">SL</th><th class="text-end">Đơn giá</th><th class="text-end">Giảm</th><th class="text-end">Thành tiền</th></tr></thead>
+        <tbody>
+        @foreach (var d in Model.OrderDetails)
+        {
+            <tr>
+                <td>@d.Variant?.Product?.ProductName</td>
+                <td>@d.VariantId</td>
+                <td class="text-end">@d.Quantity</td>
+                <td class="text-end">@AdminUi.Money(d.UnitPrice)</td>
+                <td class="text-end">@d.Discount %</td>
+                <td class="text-end">@AdminUi.Money((d.Quantity ?? 0) * (d.UnitPrice ?? 0) * (decimal)(1 - (d.Discount ?? 0) / 100.0))</td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+<div class="card-body">
+    <div class="totals">
+        <div class="row-t"><span>Tạm tính</span><span>@AdminUi.Money(sub)</span></div>
+        <div class="row-t"><span>Giảm giá đơn</span><span>@Model.OrderDiscount %</span></div>
+        <div class="row-t grand"><span>Tổng cộng</span><span>@AdminUi.Money(Model.TotalAmount)</span></div>
+    </div>
+</div></div>

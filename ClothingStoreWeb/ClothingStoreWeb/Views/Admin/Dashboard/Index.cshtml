@@ -1,0 +1,91 @@
+@model DashboardVm
+@{
+    ViewData["Title"] = "Tổng quan";
+    var max = Model.MonthlyRevenue.Max(m => m.Total);
+    if (max <= 0) { max = 1; }
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-speedometer2"></i> Tổng quan</h1>
+    <span class="text-muted">@DateTime.Now.ToString("dddd, dd/MM/yyyy", new System.Globalization.CultureInfo("vi-VN"))</span>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-md-6 col-xl-3"><div class="card stat-card"><div class="ico" style="background:#4f46e5"><i class="bi bi-cash-coin"></i></div><div><div class="val">@AdminUi.Money(Model.Revenue)</div><div class="lbl">Tổng doanh thu</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card stat-card"><div class="ico" style="background:#0891b2"><i class="bi bi-calendar-check"></i></div><div><div class="val">@AdminUi.Money(Model.RevenueThisMonth)</div><div class="lbl">Doanh thu tháng này</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card stat-card"><div class="ico" style="background:#16a34a"><i class="bi bi-receipt"></i></div><div><div class="val">@Model.OrderCount</div><div class="lbl">Đơn hàng</div></div></div></div>
+    <div class="col-md-6 col-xl-3"><div class="card stat-card"><div class="ico" style="background:#d97706"><i class="bi bi-person-heart"></i></div><div><div class="val">@Model.CustomerCount</div><div class="lbl">Khách hàng</div></div></div></div>
+</div>
+
+<div class="row g-3 mb-4">
+    <div class="col-lg-8">
+        <div class="card h-100">
+            <div class="card-header">Doanh thu 6 tháng gần nhất</div>
+            <div class="card-body">
+                <div class="d-flex align-items-end gap-3" style="height:220px">
+                    @foreach (var m in Model.MonthlyRevenue)
+                    {
+                        var h = (int)Math.Round((double)(m.Total / max) * 100);
+                        <div class="flex-fill text-center d-flex flex-column justify-content-end h-100">
+                            <small class="text-muted">@(m.Total > 0 ? (m.Total / 1000000m).ToString("0.#") + "tr" : "")</small>
+                            <div style="height:@(Math.Max(h, 2))%;background:#818cf8;border-radius:6px 6px 0 0" title="@AdminUi.Money(m.Total)"></div>
+                            <small class="mt-1">@m.Label</small>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card h-100">
+            <div class="card-header">Bán chạy nhất</div>
+            <ul class="list-group list-group-flush">
+                @foreach (var t in Model.TopProducts)
+                {
+                    <li class="list-group-item d-flex justify-content-between"><span>@t.Name <small class="text-muted">@t.VariantId</small></span><span class="badge bg-primary">@t.Quantity</span></li>
+                }
+                @if (!Model.TopProducts.Any()) { <li class="list-group-item text-muted">Chưa có dữ liệu</li> }
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between"><span>Đơn hàng gần đây</span><a asp-controller="Orders" asp-action="Index">Xem tất cả</a></div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead><tr><th>Mã đơn</th><th>Khách</th><th>Ngày</th><th class="text-end">Tổng</th></tr></thead>
+                    <tbody>
+                    @foreach (var o in Model.RecentOrders)
+                    {
+                        <tr>
+                            <td><a asp-controller="Orders" asp-action="Details" asp-route-id="@o.OrderId">@o.OrderId</a></td>
+                            <td>@(o.Customer?.FullName ?? "Khách lẻ")</td>
+                            <td>@o.OrderDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                            <td class="text-end">@AdminUi.Money(o.TotalAmount)</td>
+                        </tr>
+                    }
+                    @if (!Model.RecentOrders.Any()) { <tr><td colspan="4" class="text-center text-muted py-3">Chưa có đơn hàng</td></tr> }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between"><span>Sắp hết hàng (@Model.LowStockCount)</span><a asp-controller="ProductVariants" asp-action="Index" asp-route-lowStock="true">Xem tất cả</a></div>
+            <ul class="list-group list-group-flush">
+                @foreach (var v in Model.LowStock)
+                {
+                    <li class="list-group-item d-flex justify-content-between">
+                        <span>@v.Product?.ProductName <small class="text-muted">@v.SizeId/@v.ColorId</small></span>
+                        <span class="badge @(v.StockQuantity == 0 ? "bg-danger" : "bg-warning text-dark")">@v.StockQuantity</span>
+                    </li>
+                }
+                @if (!Model.LowStock.Any()) { <li class="list-group-item text-muted">Kho ổn định</li> }
+            </ul>
+        </div>
+    </div>
+</div>

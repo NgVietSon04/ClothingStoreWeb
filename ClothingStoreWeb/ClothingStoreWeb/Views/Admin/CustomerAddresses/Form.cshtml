@@ -1,0 +1,61 @@
+@model CustomerAddress
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "sổ địa chỉ khách hàng";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-geo-alt"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.AddressId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        @if (isEdit)
+        {
+            <div class="col-md-6">
+                <label class="form-label">Mã</label>
+                <input class="form-control" value="@Model.AddressId" readonly />
+            </div>
+        }
+        <div class="col-md-6">
+            <label class="form-label">Khách hàng <span class="text-danger">*</span></label>
+            <select asp-for="CustomerId" asp-items="@(ViewBag.CustomerIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Người nhận <span class="text-danger">*</span></label>
+            <input asp-for="RecipientName" class="form-control" />
+            <span asp-validation-for="RecipientName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Số điện thoại <span class="text-danger">*</span></label>
+            <input asp-for="PhoneNumber" class="form-control" />
+            <span asp-validation-for="PhoneNumber" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Địa chỉ chi tiết <span class="text-danger">*</span></label>
+            <input asp-for="AddressDetail" class="form-control" />
+            <span asp-validation-for="AddressDetail" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <div class="form-check form-switch mt-4 pt-2">
+                <input asp-for="IsDefault" class="form-check-input" />
+                <label asp-for="IsDefault" class="form-check-label">Địa chỉ mặc định</label>
+            </div>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

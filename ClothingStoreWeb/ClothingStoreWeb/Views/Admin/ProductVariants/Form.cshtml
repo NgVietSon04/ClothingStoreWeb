@@ -1,0 +1,113 @@
+@model ProductVariant
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "biến thể sản phẩm";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-boxes"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.VariantId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        @if (isEdit)
+        {
+            <div class="col-md-6">
+                <label class="form-label">Mã biến thể</label>
+                <input class="form-control" value="@Model.VariantId" readonly />
+            </div>
+        }
+        <div class="col-md-6">
+            <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
+            <select asp-for="ProductId" asp-items="@(ViewBag.ProductIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Size <span class="text-danger">*</span></label>
+            <select asp-for="SizeId" asp-items="@(ViewBag.SizeIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="SizeId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Màu sắc <span class="text-danger">*</span></label>
+            <select asp-for="ColorId" asp-items="@(ViewBag.ColorIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="ColorId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Đơn giá (₫) <span class="text-danger">*</span></label>
+            <input asp-for="UnitPrice" type="number" step="any" class="form-control" />
+            <span asp-validation-for="UnitPrice" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Giảm giá (%)</label>
+            <input asp-for="Discount" type="number" step="any" class="form-control" />
+            <span asp-validation-for="Discount" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Tồn kho <span class="text-danger">*</span></label>
+            <input asp-for="StockQuantity" type="number" step="1" class="form-control" />
+            <span asp-validation-for="StockQuantity" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Ảnh biến thể</label>
+            <div class="d-flex gap-3 align-items-start">
+                <img src="@AdminUi.Img(Model.Thumbnail)" class="thumb-lg" alt="" id="prev_Thumbnail" onerror="this.style.opacity=0" />
+                <div class="flex-grow-1">
+                    <input type="file" name="Thumbnail_file" accept="image/*" class="form-control mb-2 img-input" data-preview="prev_Thumbnail" />
+                    <input asp-for="Thumbnail" class="form-control" placeholder="hoặc nhập tên file ảnh có sẵn" />
+                    <span asp-validation-for="Thumbnail" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Video (URL)</label>
+            <input asp-for="VideoUrl" class="form-control" />
+            <span asp-validation-for="VideoUrl" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+@if (isEdit)
+{
+    <div class="card mt-3">
+        <div class="card-header">Thư viện ảnh biến thể (@Model.Images.Count)</div>
+        <div class="card-body">
+            <div class="gallery mb-3">
+                @foreach (var img in Model.Images.OrderBy(i => i.SortOrder))
+                {
+                    <div class="g-item">
+                        <img src="@AdminUi.Img(img.ImageFileName)" alt="" onerror="this.style.opacity=0" />
+                        <div class="g-actions">
+                            <form asp-action="DeleteImage" method="post" class="m-0" onsubmit="return confirm('Xóa ảnh này?')">
+                                <input type="hidden" name="variantId" value="@Model.VariantId" /><input type="hidden" name="fileName" value="@img.ImageFileName" />
+                                <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                @if (!Model.Images.Any()) { <span class="text-muted">Chưa có ảnh</span> }
+            </div>
+            <form asp-action="AddImages" asp-route-id="@Model.VariantId" method="post" enctype="multipart/form-data" class="d-flex gap-2">
+                <input type="file" name="files" accept="image/*" multiple class="form-control" style="max-width:420px" />
+                <button class="btn btn-primary"><i class="bi bi-upload"></i> Tải lên</button>
+            </form>
+        </div>
+    </div>
+}

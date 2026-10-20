@@ -1,0 +1,36 @@
+@model TargetAudience
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "đối tượng / phong cách";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-people"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.AudienceId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Mã đối tượng <span class="text-danger">*</span></label>
+            <input asp-for="AudienceId" class="form-control" readonly="@isEdit" autocomplete="off" />
+            <span asp-validation-for="AudienceId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Tên đối tượng <span class="text-danger">*</span></label>
+            <input asp-for="AudienceName" class="form-control" />
+            <span asp-validation-for="AudienceName" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

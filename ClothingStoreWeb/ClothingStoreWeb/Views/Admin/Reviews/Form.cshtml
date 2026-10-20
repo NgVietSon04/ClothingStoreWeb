@@ -1,0 +1,59 @@
+@model Review
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "đánh giá sản phẩm";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-star"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.ReviewId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        @if (isEdit)
+        {
+            <div class="col-md-6">
+                <label class="form-label">Mã</label>
+                <input class="form-control" value="@Model.ReviewId" readonly />
+            </div>
+        }
+        <div class="col-md-6">
+            <label class="form-label">Sản phẩm <span class="text-danger">*</span></label>
+            <select asp-for="ProductId" asp-items="@(ViewBag.ProductIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="ProductId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Khách hàng <span class="text-danger">*</span></label>
+            <select asp-for="CustomerId" asp-items="@(ViewBag.CustomerIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="CustomerId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Số sao <span class="text-danger">*</span></label>
+            <select asp-for="Rating" asp-items="@(ViewBag.RatingOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="Rating" class="text-danger small"></span>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Nhận xét</label>
+            <textarea asp-for="Comment" rows="3" class="form-control"></textarea>
+            <span asp-validation-for="Comment" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

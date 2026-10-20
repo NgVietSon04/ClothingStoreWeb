@@ -1,0 +1,137 @@
+﻿@model List<ClothingStoreWeb.Models.Order>
+
+@{
+    ViewData["Title"] = "Lịch sử đơn hàng";
+    Layout = "~/Views/User/Shared/LayoutUser.cshtml";
+}
+
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-section set-bg" data-setbg="@Url.Content("~/LayoutUser/img/breadcrumb.jpg")">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <div class="breadcrumb__text">
+                    <h2>Lịch sử đơn hàng</h2>
+                    <div class="breadcrumb__option">
+                        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                        <span>Lịch sử đơn hàng</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Breadcrumb Section End -->
+<!-- History Section Begin -->
+<section class="shoping-cart spad">
+    <div class="container">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+
+        @if (Model == null || !Model.Any())
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center py-5">
+                    <div class="mb-3">
+                        <i class="fa fa-shopping-bag" style="font-size: 54px; color: #b2b2b2;"></i>
+                    </div>
+                    <h4>Bạn chưa có đơn hàng nào trong lịch sử.</h4>
+                    <p class="text-muted">Hãy chọn cho mình những sản phẩm thời trang tuyệt vời ngay nhé!</p>
+                    <a asp-controller="Shop" asp-action="Index" class="primary-btn mt-3">KHÁM PHÁ CỬA HÀNG</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <div class="row">
+                <div class="col-lg-12">
+                    @foreach (var order in Model)
+                    {
+                        <div class="card mb-4 shadow-sm" style="border: 1px solid #ebebeb; border-radius: 8px; overflow: hidden;">
+                            <div class="card-header bg-light d-flex justify-content-between align-items-center py-3 px-4">
+                                <div>
+                                    <span class="font-weight-bold text-dark mr-3" style="font-size: 16px;">Mã đơn: #@order.OrderId</span>
+                                    <span class="text-muted small"><i class="fa fa-calendar"></i> @order.OrderDate?.ToString("dd/MM/yyyy HH:mm")</span>
+                                </div>
+                                <div>
+                                    <span class="badge badge-pill badge-success px-3 py-2" style="font-size: 12px; font-weight: 600;">
+                                        @(order.PaymentMethod == 0 ? "Thanh toán COD" : order.PaymentMethod == 1 ? "Chuyển khoản NH" : "Ví MoMo")
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="card-body p-4">
+                                <div class="table-responsive">
+                                    <table class="table table-borderless mb-0">
+                                        <thead>
+                                            <tr class="text-muted small border-bottom">
+                                                <th style="width: 50%;">Sản phẩm</th>
+                                                <th style="width: 20%;">Đơn giá</th>
+                                                <th style="width: 10%;">Số lượng</th>
+                                                <th style="width: 20%;" class="text-right">Thành tiền</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in order.OrderDetails)
+                                            {
+                                                var productName = item.Variant?.Product?.ProductName ?? "Sản phẩm thời trang";
+                                                decimal unitPrice = item.UnitPrice ?? 0;
+                                                decimal lineTotal = unitPrice * (item.Quantity ?? 0);
+
+                                                <tr class="align-middle">
+                                                    <td>
+                                                        <span class="font-weight-bold text-dark">@productName</span>
+                                                    </td>
+                                                    <td>@unitPrice.ToString("N0") đ</td>
+                                                    <td>@(item.Quantity ?? 0)</td>
+                                                    <td class="text-right font-weight-bold text-danger">@lineTotal.ToString("N0") đ</td>
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <div class="card-footer bg-white d-flex justify-content-between align-items-center py-3 px-4 border-top">
+                                <div>
+                                    @if (!string.IsNullOrEmpty(order.Notes))
+                                    {
+                                        <small class="text-muted"><strong>Ghi chú:</strong> @order.Notes</small>
+                                    }
+                                    else
+                                    {
+                                        <small class="text-muted">Không có ghi chú</small>
+                                    }
+                                </div>
+
+                                <div class="d-flex align-items-center">
+                                    <!-- Nút Hủy đơn hàng -->
+                                    <form asp-controller="Order" asp-action="CancelOrder" method="post" class="mr-3" onsubmit="return confirm('Bạn có chắc chắn muốn hủy đơn hàng này không? Số lượng sản phẩm sẽ được hoàn lại kho.');">
+                                        <input type="hidden" name="orderId" value="@order.OrderId" />
+                                        <button type="submit" class="btn btn-outline-danger btn-sm px-3 py-1 font-weight-bold" style="border-radius: 4px;">
+                                            <i class="fa fa-times mr-1"></i> Hủy đơn hàng
+                                        </button>
+                                    </form>
+
+                                    <div class="text-right">
+                                        <span class="text-muted mr-2">Tổng thanh toán:</span>
+                                        <span class="text-danger font-weight-bold" style="font-size: 20px;">
+                                            @order.TotalAmount?.ToString("N0") đ
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    </div>
+</section>
+<!-- History Section End -->

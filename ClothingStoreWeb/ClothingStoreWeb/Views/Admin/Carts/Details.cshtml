@@ -1,0 +1,29 @@
+@model Cart
+@{
+    ViewData["Title"] = "Giỏ " + Model.CartId;
+}
+<div class="page-head">
+    <h1><i class="bi bi-cart3"></i> Giỏ @Model.CartId <small class="text-muted fs-6">@Model.Username</small></h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+<div class="card"><div class="table-responsive">
+    <table class="table align-middle mb-0">
+        <thead><tr><th>Sản phẩm</th><th>Biến thể</th><th class="text-end">SL</th><th class="text-end">Đơn giá</th><th>Ngày thêm</th><th></th></tr></thead>
+        <tbody>
+        @foreach (var d in Model.CartDetails)
+        {
+            <tr>
+                <td>@d.Variant?.Product?.ProductName</td><td>@d.VariantId</td><td class="text-end">@d.Quantity</td>
+                <td class="text-end">@AdminUi.MoneyD(d.Variant?.UnitPrice)</td><td>@d.AddedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                <td class="text-end">
+                    <form asp-action="DeleteItem" method="post" class="m-0" onsubmit="return confirm('Xóa dòng này?')">
+                        <input type="hidden" name="cartId" value="@d.CartId" /><input type="hidden" name="variantId" value="@d.VariantId" />
+                        <button class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                    </form>
+                </td>
+            </tr>
+        }
+        @if (!Model.CartDetails.Any()) { <tr><td colspan="6" class="text-center text-muted py-3">Giỏ trống</td></tr> }
+        </tbody>
+    </table>
+</div></div>

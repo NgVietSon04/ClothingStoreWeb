@@ -1,0 +1,45 @@
+@model PagedList<Product>
+@{
+    ViewData["Title"] = "Sản phẩm";
+}
+<div class="page-head">
+    <div><h1><i class="bi bi-bag"></i> Sản phẩm</h1><p class="text-muted mb-0">Tổng cộng @Model.TotalItems sản phẩm</p></div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm sản phẩm</a>
+</div>
+<div class="card"><div class="card-body">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4"><input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm mã, tên, style code..." /></div>
+        <div class="col-md-2"><select name="categoryId" class="form-select" asp-items="@(new SelectList((IEnumerable<SelectListItem>)ViewBag.Categories, "Value", "Text", (string?)ViewBag.CategoryId))"><option value="">Mọi danh mục</option></select></div>
+        <div class="col-md-2"><select name="brandId" class="form-select" asp-items="@(new SelectList((IEnumerable<SelectListItem>)ViewBag.Brands, "Value", "Text", (string?)ViewBag.BrandId))"><option value="">Mọi thương hiệu</option></select></div>
+        <div class="col-md-2"><select name="audienceId" class="form-select" asp-items="@(new SelectList((IEnumerable<SelectListItem>)ViewBag.Audiences, "Value", "Text", (string?)ViewBag.AudienceId))"><option value="">Mọi đối tượng</option></select></div>
+        <div class="col-auto"><button class="btn btn-outline-secondary"><i class="bi bi-search"></i> Lọc</button> <a asp-action="Index" class="btn btn-link">Xóa lọc</a></div>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Ảnh</th><th>Mã</th><th>Tên sản phẩm</th><th>Danh mục</th><th>Thương hiệu</th><th>Giá</th><th>Biến thể</th><th>Tồn kho</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var p in Model.Items)
+            {
+                <tr>
+                    <td><img src="@AdminUi.Img(p.Thumbnail)" class="thumb" alt="" onerror="this.style.opacity=0" /></td>
+                    <td>@p.ProductId</td>
+                    <td><a asp-action="Details" asp-route-id="@p.ProductId">@p.ProductName</a>
+                        @if (p.DiscountPercent > 0) { <span class="badge bg-danger">-@p.DiscountPercent%</span> }</td>
+                    <td>@p.Category?.CategoryName</td>
+                    <td>@p.Brand?.BrandName</td>
+                    <td>@(p.MinPrice == p.MaxPrice ? AdminUi.Money(p.MinPrice) : AdminUi.Money(p.MinPrice) + " – " + AdminUi.Money(p.MaxPrice))</td>
+                    <td>@p.Variants.Count</td>
+                    <td>@p.Variants.Sum(v => v.StockQuantity ?? 0)</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Details" asp-route-id="@p.ProductId" class="btn btn-sm btn-outline-secondary" title="Chi tiết"><i class="bi bi-eye"></i></a>
+                        <a asp-action="Edit" asp-route-id="@p.ProductId" class="btn btn-sm btn-outline-primary" title="Sửa"><i class="bi bi-pencil"></i></a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-delete-url="@Url.Action("Delete", new { id = p.ProductId })" data-delete-name="@p.ProductName"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Items.Any()) { <tr><td colspan="9" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr> }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model" />
+</div></div>

@@ -1,0 +1,124 @@
+﻿@{
+    Layout = "~/Views/User/Shared/LayoutAuth.cshtml";
+    ViewData["Title"] = "Đăng nhập / Đăng ký";
+
+    // Tab đang hiển thị: "login" (mặc định) hoặc "register"
+    var activeTab = TempData["AuthTab"]?.ToString() == "register" ? "register" : "login";
+    var loginEmail = TempData["LoginEmail"]?.ToString() ?? "";
+    var registerName = TempData["RegisterName"]?.ToString() ?? "";
+    var registerEmail = TempData["RegisterEmail"]?.ToString() ?? "";
+
+    // Layout đọc giá trị này để highlight nút toggle
+    ViewData["AuthTab"] = activeTab;
+}
+
+<!-- Hiển thị thông báo Lỗi / Thành công -->
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show text-center" role="alert">
+        <i class="fa fa-exclamation-circle mr-1"></i> @TempData["Error"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show text-center" role="alert">
+        <i class="fa fa-check-circle mr-1"></i> @TempData["Success"]
+        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+        </button>
+    </div>
+}
+
+<!-- FORM ĐĂNG NHẬP -->
+<div class="auth-pane @(activeTab == "login" ? "active" : "")" data-auth-pane="login">
+    <form asp-controller="Account" asp-action="Login" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Địa chỉ Email</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-envelope text-muted"></i></span>
+                </div>
+                <input type="email" name="email" class="form-control" placeholder="nhapemail@example.com" value="@loginEmail" required />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Mật khẩu</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-lock text-muted"></i></span>
+                </div>
+                <input type="password" name="password" class="form-control" placeholder="••••••••" required />
+            </div>
+        </div>
+
+        <div class="form-group d-flex justify-content-between align-items-center">
+            <div class="custom-control custom-checkbox">
+                <input type="checkbox" class="custom-control-input" id="rememberMe" name="rememberMe" value="true">
+                <label class="custom-control-label text-muted" for="rememberMe">Ghi nhớ đăng nhập</label>
+            </div>
+            <a href="#" class="text-muted small">Quên mật khẩu?</a>
+        </div>
+
+        <button type="submit" class="btn btn-block text-white font-weight-bold py-2" style="background-color: #7fad39; border-radius: 6px;">
+            ĐĂNG NHẬP
+        </button>
+    </form>
+</div>
+
+<!-- FORM ĐĂNG KÝ -->
+<div class="auth-pane @(activeTab == "register" ? "active" : "")" data-auth-pane="register">
+    <form asp-controller="Account" asp-action="Register" method="post">
+        @Html.AntiForgeryToken()
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Họ và tên</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-user text-muted"></i></span>
+                </div>
+                <input type="text" name="fullName" class="form-control" placeholder="Nguyễn Văn A" maxlength="100" value="@registerName" required />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Địa chỉ Email</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-envelope text-muted"></i></span>
+                </div>
+                <input type="email" name="email" class="form-control" placeholder="nhapemail@example.com" maxlength="100" value="@registerEmail" required />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Mật khẩu</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-lock text-muted"></i></span>
+                </div>
+                <input type="password" name="password" class="form-control" placeholder="Tối thiểu 8 ký tự" minlength="8" required />
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="font-weight-bold text-secondary">Xác nhận mật khẩu</label>
+            <div class="input-group">
+                <div class="input-group-prepend">
+                    <span class="input-group-text bg-light"><i class="fa fa-shield text-muted"></i></span>
+                </div>
+                <input type="password" name="confirmPassword" class="form-control" placeholder="Nhập lại mật khẩu" minlength="8" required />
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-block text-white font-weight-bold py-2 mt-4" style="background-color: #7fad39; border-radius: 6px;">
+            ĐĂNG KÝ TÀI KHOẢN
+        </button>
+    </form>
+</div>

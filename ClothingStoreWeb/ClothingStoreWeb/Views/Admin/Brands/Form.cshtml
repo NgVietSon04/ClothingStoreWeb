@@ -1,0 +1,43 @@
+@model Brand
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "thương hiệu";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-award"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.BrandId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Mã thương hiệu <span class="text-danger">*</span></label>
+            <input asp-for="BrandId" class="form-control" readonly="@isEdit" autocomplete="off" />
+            <span asp-validation-for="BrandId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Tên thương hiệu <span class="text-danger">*</span></label>
+            <input asp-for="BrandName" class="form-control" />
+            <span asp-validation-for="BrandName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Quốc gia</label>
+            <select asp-for="BrandCountryId" asp-items="@(ViewBag.BrandCountryIdOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="BrandCountryId" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

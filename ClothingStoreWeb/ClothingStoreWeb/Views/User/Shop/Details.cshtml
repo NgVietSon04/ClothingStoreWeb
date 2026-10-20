@@ -1,0 +1,324 @@
+﻿@model ClothingStoreWeb.Models.Product
+@{
+    ViewData["Title"] = Model.ProductName ?? "Chi tiết sản phẩm";
+    Layout = "~/Views/User/Shared/LayoutUser.cshtml";
+
+    var relatedProducts = ViewBag.RelatedProducts as List<ClothingStoreWeb.Models.Product>;
+    var mainImg = string.IsNullOrEmpty(Model.Thumbnail) ? "feature-1.jpg" : Model.Thumbnail.Trim();
+}
+    <style >
+    /* ===== TÙY CHỈNH KHUNG ẢNH CHI TIẾT SẢN PHẨM ===== */
+    .product__details__pic__item {
+        position: relative;
+        width: 100%;
+        height: 450px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ebebeb;
+    }
+
+    .product__details__pic__item--large {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain;
+        padding: 10px;
+    }
+
+    .product__details__pic__slider img {
+        width: 100px;
+        height: 100px;
+        object-fit: cover;
+        border-radius: 6px;
+        cursor: pointer;
+        border: 1px solid #ebebeb;
+        margin-right: 10px;
+    }
+
+    /* ===== NÚT THÊM VÀO GIỎ (CÂN ĐỐI CHIỀU CAO & KHÔNG BỊ BORDER KHI CLICK) ===== */
+    .btn-custom-add-cart {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        height: 46px; /* Cố định chiều cao đồng bộ với ô số lượng và các nút chuẩn của template */
+        padding: 0 30px;
+        color: #ffffff;
+        background: #7fad39;
+        font-weight: 700;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 6px;
+        letter-spacing: 1px;
+        vertical-align: top;
+        transition: all 0.3s ease;
+        outline: none !important;
+        box-shadow: none !important;
+    }
+
+        .btn-custom-add-cart:hover,
+        .btn-custom-add-cart:focus,
+        .btn-custom-add-cart:active {
+            background: #6c9631;
+            color: #ffffff;
+            outline: none !important;
+            box-shadow: none !important;
+            border: none !important;
+        }
+
+    /* ===== ĐỒNG BỘ CHIỀU CAO VỚI KHUNG SỐ LƯỢNG (PRO-QTY) ===== */
+    .product__details__quantity .pro-qty {
+        height: 46px !important;
+        border-radius: 6px;
+    }
+
+        .product__details__quantity .pro-qty input {
+            height: 44px;
+        }
+
+    /* ===== TRẠNG THÁI NÚT YÊU THÍCH (GIỮ NGUYÊN NỀN, CHUYỂN ICON THÀNH ĐỎ) ===== */
+    .heart-icon {
+        height: 46px;
+        width: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #ebebeb;
+        border-radius: 6px;
+        vertical-align: top;
+        margin-left: 6px;
+        transition: all 0.3s;
+    }
+
+        .heart-icon span {
+            font-size: 18px;
+            color: #6f6f6f;
+            transition: color 0.3s;
+        }
+
+        .heart-icon.active-fav {
+            border-color: #ebebeb !important;
+            background: #ffffff !important; /* Giữ nguyên background cũ */
+        }
+
+            .heart-icon.active-fav span {
+                color: #ef4444 !important; /* Đổi màu icon thành đỏ đầy */
+            }
+</style>
+
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-section set-bg" data-setbg="@Url.Content("~/LayoutUser/img/breadcrumb.jpg")">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <div class="breadcrumb__text">
+                    <h2>@Model.ProductName</h2>
+                    <div class="breadcrumb__option">
+                        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                        @if (Model.Category != null)
+                        {
+                            <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@Model.CategoryId">
+                                @Model.Category.CategoryName
+                            </a>
+                        }
+                        else
+                        {
+                            <a asp-controller="Shop" asp-action="Index">Cửa hàng</a>
+                        }
+                        <span>@Model.ProductName</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Breadcrumb Section End -->
+<!-- Product Details Section Begin -->
+<section class="product-details spad">
+    <div class="container">
+        <div class="row">
+            <!-- Hình ảnh sản phẩm -->
+            <div class="col-lg-6 col-md-6">
+                <div class="product__details__pic">
+                    <div class="product__details__pic__item">
+                        <img class="product__details__pic__item--large"
+                             src="@Url.Content("~/LayoutUser/img/featured/" + mainImg)"
+                             alt="@Model.ProductName">
+                    </div>
+                    <div class="product__details__pic__slider owl-carousel">
+                        <img data-imgbigurl="@Url.Content("~/LayoutUser/img/featured/" + mainImg)"
+                             src="@Url.Content("~/LayoutUser/img/featured/" + mainImg)" alt="">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Thông tin chi tiết bên phải -->
+            <div class="col-lg-6 col-md-6">
+                <div class="product__details__text">
+                    <h3>@Model.ProductName</h3>
+                    <div class="product__details__rating">
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star"></i>
+                        <i class="fa fa-star-half-o"></i>
+                        <span>(18 đánh giá)</span>
+                    </div>
+                    <div class="product__details__price">@Model.MinPrice?.ToString("N0") đ</div>
+                    <p>
+                        @(string.IsNullOrEmpty(Model.Description)
+                                                ? "Sản phẩm thời trang cao cấp, chất liệu mềm mại, thoáng mát và bền đẹp theo thời gian."
+                                                : Model.Description)
+                    </p>
+
+                    <form id="detailsAddToCartForm" class="d-inline">
+                        <input type="hidden" name="id" id="detailProductId" value="@Model.ProductId" />
+                        <div class="product__details__quantity">
+                            <div class="quantity">
+                                <div class="pro-qty">
+                                    <input type="text" name="quantity" id="detailQuantity" value="1">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Nút Thêm vào giỏ đã được đồng bộ style bo góc và màu sắc -->
+                        <button type="button" class="btn-custom-add-cart" id="btnDetailsAddToCart">THÊM VÀO GIỎ</button>
+                    </form>
+                    <a href="javascript:void(0)" class="heart-icon ajax-toggle-favorite" data-id="@Model.ProductId" title="Yêu thích"><span class="icon_heart_alt"></span></a>
+
+                    <ul>
+                        <li><b>Tình trạng</b> <span>Còn hàng</span></li>
+                        <li><b>Vận chuyển</b> <span>Giao hàng toàn quốc. <samp>Đổi trả trong 7 ngày</samp></span></li>
+                        <li><b>Danh mục</b> <span>@(Model.Category?.CategoryName ?? "Đang cập nhật")</span></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Product Details Section End -->
+@if (relatedProducts != null && relatedProducts.Any())
+{
+    <section class="related-product">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-12">
+                    <div class="section-title related__product__title">
+                        <h2>Sản Phẩm Liên Quan</h2>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                @foreach (var item in relatedProducts)
+                {
+                    var imgFile = string.IsNullOrEmpty(item.Thumbnail) ? "feature-1.jpg" : item.Thumbnail.Trim();
+                    <div class="col-lg-3 col-md-4 col-sm-6">
+                        <div class="product__item">
+                            <div class="product__item__pic set-bg" data-setbg="@Url.Content("~/LayoutUser/img/featured/" + imgFile)">
+                                <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" class="product-card-overlay-link"></a>
+                                <ul class="product__item__pic__hover">
+                                    <li><a href="javascript:void(0)" class="ajax-toggle-favorite" data-id="@item.ProductId" title="Yêu thích"><i class="fa fa-heart"></i></a></li>
+                                    <li><a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId" title="Chi tiết"><i class="fa fa-retweet"></i></a></li>
+                                    <li><a href="javascript:void(0)" class="ajax-add-to-cart" data-id="@item.ProductId" title="Thêm vào giỏ hàng"><i class="fa fa-shopping-cart"></i></a></li>
+                                </ul>
+                            </div>
+                            <div class="product__item__text">
+                                <h6>
+                                    <a asp-controller="Shop" asp-action="Details" asp-route-id="@item.ProductId">
+                                        @item.ProductName
+                                    </a>
+                                </h6>
+                                <h5>@item.MinPrice?.ToString("N0") đ</h5>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </section>
+}
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $('.set-bg').each(function () {
+                var bg = $(this).data('setbg');
+                if (bg) {
+                    $(this).css('background-image', 'url(' + bg + ')');
+                }
+            });
+
+            // Đồng bộ nút trái tim cho trang chi tiết nếu đã nằm trong wishlist
+            var currentId = '@Model.ProductId';
+            $.get('/Favorite/GetInfo', function (res) {
+                if (res && res.ids && res.ids.indexOf(currentId) !== -1) {
+                    $('.heart-icon.ajax-toggle-favorite').addClass('active-fav');
+                }
+            });
+        });
+
+        // Bấm nút Trái tim để Thêm/Bỏ yêu thích
+        $(document).on('click', '.ajax-toggle-favorite', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var productId = $btn.data('id');
+
+            $.ajax({
+                url: '/Favorite/Toggle',
+                type: 'POST',
+                data: { id: productId },
+                success: function (response) {
+                    if (response.success) {
+                        $('.wishlist-badge').text(response.wishlistCount);
+                        $('.ajax-toggle-favorite[data-id="' + productId + '"]').toggleClass('active-fav', response.isAdded);
+
+                        var msg = response.isAdded ? "Đã thêm vào danh sách yêu thích!" : "Đã xóa khỏi danh sách yêu thích!";
+                        showOganiToast(msg);
+                    }
+                }
+            });
+        });
+
+        // Xử lý thêm vào giỏ hàng tại trang chi tiết
+        $(document).on('click', '#btnDetailsAddToCart', function (e) {
+            e.preventDefault();
+            var productId = $('#detailProductId').val();
+            var quantity = $('#detailQuantity').val() || 1;
+
+            if (typeof isAuthenticated !== 'undefined' && !isAuthenticated) {
+                if (typeof openAuthModal === 'function') {
+                    openAuthModal();
+                }
+                return;
+            }
+
+            $.ajax({
+                url: '/Cart/AddToCart',
+                type: 'POST',
+                data: { id: productId, quantity: quantity },
+                success: function (response) {
+                    if (response.success) {
+                        $('.header-cart__badge, .header-cart__badge-mobile').text(response.cartCount);
+                        $('.header-cart__text strong').text(response.cartTotal);
+
+                        if (typeof showOganiToast === 'function') {
+                            showOganiToast("Đã thêm sản phẩm vào giỏ hàng thành công!");
+                        } else {
+                            alert("Đã thêm vào giỏ hàng thành công!");
+                        }
+                    } else {
+                        alert(response.message || "Có lỗi xảy ra.");
+                    }
+                },
+                error: function () {
+                    alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+                    if (typeof openAuthModal === 'function') {
+                        openAuthModal();
+                    }
+                }
+            });
+        });
+    </script>
+}

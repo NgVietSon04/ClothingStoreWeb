@@ -1,0 +1,47 @@
+@model Category
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "danh mục";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-grid"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.CategoryId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        <div class="col-md-6">
+            <label class="form-label">Mã danh mục <span class="text-danger">*</span></label>
+            <input asp-for="CategoryId" class="form-control" readonly="@isEdit" autocomplete="off" />
+            <span asp-validation-for="CategoryId" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Tên danh mục <span class="text-danger">*</span></label>
+            <input asp-for="CategoryName" class="form-control" />
+            <span asp-validation-for="CategoryName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Ảnh đại diện</label>
+            <div class="d-flex gap-3 align-items-start">
+                <img src="@AdminUi.Img(Model.Thumbnail)" class="thumb-lg" alt="" id="prev_Thumbnail" onerror="this.style.opacity=0" />
+                <div class="flex-grow-1">
+                    <input type="file" name="Thumbnail_file" accept="image/*" class="form-control mb-2 img-input" data-preview="prev_Thumbnail" />
+                    <input asp-for="Thumbnail" class="form-control" placeholder="hoặc nhập tên file ảnh có sẵn" />
+                    <span asp-validation-for="Thumbnail" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

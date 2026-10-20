@@ -1,0 +1,86 @@
+@model Employee
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "nhân viên";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-person-badge"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.EmployeeId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        @if (isEdit)
+        {
+            <div class="col-md-6">
+                <label class="form-label">Mã NV</label>
+                <input class="form-control" value="@Model.EmployeeId" readonly />
+            </div>
+        }
+        <div class="col-md-6">
+            <label class="form-label">Ảnh đại diện</label>
+            <div class="d-flex gap-3 align-items-start">
+                <img src="@AdminUi.Img(Model.Avatar)" class="thumb-lg" alt="" id="prev_Avatar" onerror="this.style.opacity=0" />
+                <div class="flex-grow-1">
+                    <input type="file" name="Avatar_file" accept="image/*" class="form-control mb-2 img-input" data-preview="prev_Avatar" />
+                    <input asp-for="Avatar" class="form-control" placeholder="hoặc nhập tên file ảnh có sẵn" />
+                    <span asp-validation-for="Avatar" class="text-danger small"></span>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Họ và tên <span class="text-danger">*</span></label>
+            <input asp-for="FullName" class="form-control" />
+            <span asp-validation-for="FullName" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Tài khoản đăng nhập</label>
+            <select asp-for="Username" asp-items="@(ViewBag.UsernameOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="Username" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Ngày sinh</label>
+            <input asp-for="DateOfBirth" class="form-control" />
+            <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Điện thoại 1</label>
+            <input asp-for="PhoneNumber1" class="form-control" />
+            <span asp-validation-for="PhoneNumber1" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Điện thoại 2</label>
+            <input asp-for="PhoneNumber2" class="form-control" />
+            <span asp-validation-for="PhoneNumber2" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Địa chỉ</label>
+            <input asp-for="Address" class="form-control" />
+            <span asp-validation-for="Address" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Chức vụ</label>
+            <input asp-for="Position" class="form-control" />
+            <span asp-validation-for="Position" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Ghi chú</label>
+            <input asp-for="Notes" class="form-control" />
+            <span asp-validation-for="Notes" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

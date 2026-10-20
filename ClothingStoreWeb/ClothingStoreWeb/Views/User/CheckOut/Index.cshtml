@@ -1,0 +1,266 @@
+﻿@model List<ClothingStoreWeb.Models.CartDetail>
+
+@{
+    ViewData["Title"] = "Thanh toán";
+    Layout = "~/Views/User/Shared/LayoutUser.cshtml";
+
+    var addresses = (List<ClothingStoreWeb.Models.CustomerAddress>)ViewBag.Addresses;
+    int selectedAddressId = (int)ViewBag.SelectedAddressId;
+    bool useNew = addresses.Count == 0 || selectedAddressId == 0;
+
+    decimal subtotal = ViewBag.Subtotal;
+    decimal shippingFee = ViewBag.ShippingFee;
+    decimal discount = ViewBag.Discount;
+    decimal total = ViewBag.Total;
+    string? couponCode = ViewBag.CouponCode as string;
+
+    decimal FinalPrice(ClothingStoreWeb.Models.ProductVariant v)
+    {
+        var price = (decimal)(v.UnitPrice ?? (double?)(v.Product?.MinPrice ?? 0m) ?? 0d);
+        var percent = (decimal)(v.Discount ?? 0);
+        return percent > 0 ? Math.Round(price * (1 - percent / 100m), 0) : price;
+    }
+}
+
+<!-- Breadcrumb Section Begin -->
+<section class="breadcrumb-section set-bg" data-setbg="@Url.Content("~/LayoutUser/img/breadcrumb.jpg")">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12 text-center">
+                <div class="breadcrumb__text">
+                    <h2>Thanh Toán</h2>
+                    <div class="breadcrumb__option">
+                        <a asp-controller="Home" asp-action="Index">Trang chủ</a>
+                        <span>Thanh toán</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+<!-- Breadcrumb Section End -->
+<!-- Checkout Section Begin -->
+<section class="checkout spad">
+    <div class="container">
+        <div class="row">
+            <div class="col-lg-12">
+                <h6>
+                    <span class="icon_tag_alt"></span> Bạn có mã giảm giá? <a href="#">Nhấp vào đây</a> để nhập mã của bạn
+                </h6>
+            </div>
+        </div>
+
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">@TempData["Error"]</div>
+        }
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success">@TempData["Success"]</div>
+        }
+
+        @if (Model == null || Model.Count == 0)
+        {
+            <div class="row">
+                <div class="col-lg-12 text-center py-5">
+                    <h4>Giỏ hàng của bạn đang trống.</h4>
+                   <a asp-controller="Shop" asp-action="Index" class="site-btn mt-3" style="border-radius: 6px; padding: 12px 30px; font-weight: bold; background-color: #7fad39; transition: all 0.3s;">Tiếp tục mua sắm</a>
+                </div>
+            </div>
+        }
+        else
+        {
+            <form asp-controller="Checkout" asp-action="PlaceOrder" method="post" id="checkoutForm" class="checkout__form">
+                <div class="row">
+                    <div class="col-lg-7 col-md-6">
+                        <h4>Chi tiết hóa đơn & Địa chỉ</h4>
+
+                        @foreach (var a in addresses)
+                        {
+                            <div class="checkout__input__checkbox" style="margin-bottom: 15px;">
+                                <label>
+                                    <input type="radio" name="SelectedAddressId" value="@a.AddressId" @(selectedAddressId == a.AddressId ? "checked" : "") />
+                                    <b>@a.RecipientName</b> - @a.PhoneNumber
+                                    @if (a.IsDefault == true)
+                                    {
+                                        <span class="badge badge-success ml-2">Mặc định</span>
+                                    }
+                                    <div class="text-muted small">@a.AddressDetail</div>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        }
+
+                        @if (addresses.Count > 0)
+                        {
+                            <div class="checkout__input__checkbox" style="margin-bottom: 20px;">
+                                <label>
+                                    <input type="radio" name="SelectedAddressId" value="0" @(useNew ? "checked" : "") />
+                                    <b>Giao tới địa chỉ khác</b>
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        }
+                        else
+                        {
+                            <input type="hidden" name="SelectedAddressId" value="0" />
+                        }
+
+                        <div id="newAddressForm" style="@(useNew ? "" : "display:none")">
+                            <div class="row">
+                                <div class="col-lg-6">
+                                    <div class="checkout__input">
+                                        <p>Họ tên người nhận<span>*</span></p>
+                                        <input type="text" id="RecipientName" name="RecipientName" maxlength="100"
+                                               value="@(ViewBag.PrefillName as string)" placeholder="Nguyễn Văn A" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-6">
+                                    <div class="checkout__input">
+                                        <p>Số điện thoại<span>*</span></p>
+                                        <input type="tel" id="PhoneNumber" name="PhoneNumber" maxlength="15"
+                                               value="@(ViewBag.PrefillPhone as string)" placeholder="09xx xxx xxx" />
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="checkout__input">
+                                <p>Địa chỉ nhận hàng<span>*</span></p>
+                                <input type="text" id="AddressDetail" name="AddressDetail" maxlength="255"
+                                       value="@(ViewBag.PrefillAddress as string)" class="checkout__input__add"
+                                       placeholder="Số nhà, đường, phường/xã, quận/huyện, tỉnh/thành phố" />
+                            </div>
+                            <div class="checkout__input__checkbox">
+                                <label for="save-addr">
+                                    <input type="checkbox" id="save-addr" name="SaveAddress" value="true" checked />
+                                    Lưu địa chỉ này vào sổ địa chỉ
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="checkout__input">
+                            <p>Ghi chú đơn hàng</p>
+                            <input type="text" name="Note" maxlength="100" placeholder="Ghi chú về đơn hàng của bạn, ví dụ: thời gian giao hàng cụ thể." />
+                        </div>
+
+                        <div class="checkout__input__checkbox" style="margin-top: 20px;">
+                            <label for="chkInvoice">
+                                <input type="checkbox" id="chkInvoice" name="RequestInvoice" value="true" />
+                                Xuất hóa đơn công ty
+                                <span class="checkmark"></span>
+                            </label>
+                        </div>
+
+                        <div id="invoiceForm" style="display:none; margin-top: 15px;">
+                            <div class="checkout__input">
+                                <p>Mã số thuế<span>*</span></p>
+                                <input type="text" id="TaxCode" name="TaxCode" maxlength="100" placeholder="Mã số thuế doanh nghiệp" />
+                            </div>
+                            <div class="checkout__input">
+                                <p>Tên công ty & địa chỉ<span>*</span></p>
+                                <input type="text" id="TaxInfo" name="TaxInfo" maxlength="250" placeholder="Tên công ty và địa chỉ đầy đủ" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-5 col-md-6">
+                        <div class="checkout__order">
+                            <h4>Đơn hàng của bạn</h4>
+                            <div class="checkout__order__products">Sản phẩm <span>Tổng tiền</span></div>
+                            <ul>
+                                @foreach (var cd in Model)
+                                {
+                                    var v = cd.Variant;
+                                    var productName = v?.Product?.ProductName ?? "Sản phẩm";
+                                    var imageFileName = !string.IsNullOrEmpty(v?.Thumbnail)
+                                    ? v.Thumbnail.Trim()
+                                    : (!string.IsNullOrEmpty(v?.Product?.Thumbnail) ? v.Product.Thumbnail.Trim() : "feature-1.jpg");
+
+                                    var imagePath = imageFileName.StartsWith("http") || imageFileName.StartsWith("/")
+                                    ? imageFileName
+                                    : Url.Content("~/LayoutUser/img/featured/" + imageFileName);
+
+                                    var final = FinalPrice(v!);
+
+                                    <li>
+                                        <img src="@imagePath" alt="" style="width: 40px; height: 40px; object-fit: cover; margin-right: 8px; border-radius: 4px;" />
+                                        @productName x @cd.Quantity <span>@((final * cd.Quantity).ToString("N0")) đ</span>
+                                    </li>
+                                }
+                            </ul>
+
+                            <div class="checkout__order__subtotal">
+                                Tạm tính <span>@subtotal.ToString("N0") đ</span>
+                            </div>
+                            <div class="checkout__order__subtotal" style="border-top: none; padding-top: 0;">
+                                Phí vận chuyển <span>@(shippingFee == 0 ? "Miễn phí" : shippingFee.ToString("N0") + " đ")</span>
+                            </div>
+                            @if (discount > 0)
+                            {
+                                <div class="checkout__order__subtotal" style="border-top: none; padding-top: 0;">
+                                    Giảm giá <span>-@discount.ToString("N0") đ</span>
+                                </div>
+                            }
+                            <div class="checkout__order__total">
+                                Tổng cộng <span>@total.ToString("N0") đ</span>
+                            </div>
+
+                            <div class="checkout__input__checkbox">
+                                <label for="payment-cod">
+                                    <input type="radio" id="payment-cod" name="PaymentMethod" value="0" checked />
+                                    Thanh toán khi nhận hàng (COD)
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="checkout__input__checkbox">
+                                <label for="payment-bank">
+                                    <input type="radio" id="payment-bank" name="PaymentMethod" value="1" />
+                                    Chuyển khoản ngân hàng
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+                            <div class="checkout__input__checkbox">
+                                <label for="payment-momo">
+                                    <input type="radio" id="payment-momo" name="PaymentMethod" value="2" />
+                                    Ví MoMo
+                                    <span class="checkmark"></span>
+                                </label>
+                            </div>
+
+                            <button type="submit" class="site-btn" id="btnPlaceOrder">ĐẶT HÀNG</button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        }
+    </div>
+</section>
+<!-- Checkout Section End -->
+@section Scripts {
+    <script>
+        $(function () {
+            var $form = $('#checkoutForm');
+
+            function syncRequired() {
+                var useNew = $('input[name="SelectedAddressId"]:checked').val() === '0'
+                          || $('input[name="SelectedAddressId"]').filter('[type=hidden]').length > 0;
+                $('#newAddressForm').toggle(useNew);
+                $('#RecipientName, #PhoneNumber, #AddressDetail').prop('required', useNew);
+
+                var invoice = $('#chkInvoice').is(':checked');
+                $('#invoiceForm').toggle(invoice);
+                $('#TaxCode, #TaxInfo').prop('required', invoice);
+            }
+
+            $('input[name="SelectedAddressId"], #chkInvoice').on('change', syncRequired);
+            syncRequired();
+
+            $form.on('submit', function (e) {
+                var submitter = e.originalEvent && e.originalEvent.submitter;
+                if (submitter && submitter.id !== 'btnPlaceOrder') return;
+                if (!this.checkValidity()) return;
+                $('#btnPlaceOrder').prop('disabled', true).text('ĐANG XỬ LÝ...');
+            });
+        });
+    </script>
+}

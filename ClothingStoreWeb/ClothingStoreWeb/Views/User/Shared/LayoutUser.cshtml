@@ -1,0 +1,753 @@
+﻿@using ClothingStoreWeb.Services
+@using ClothingStoreWeb.Models 
+@using Microsoft.Extensions.Options
+@inject ILayoutDataService LayoutDataService
+@inject IOptions<ShopSettings> ShopOptions
+@{
+    var shop = ShopOptions.Value;
+    var layoutData = await LayoutDataService.GetAsync();
+
+    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString() ?? "";
+    var act = ViewContext.RouteData.Values["action"]?.ToString() ?? "";
+
+    var currentCategoryId = ViewContext.RouteData.Values["categoryId"]?.ToString();
+    if (string.IsNullOrEmpty(currentCategoryId))
+    {
+        currentCategoryId = Context.Request.Query["categoryId"].ToString();
+    }
+
+    var isHome = ctrl.Equals("Home", StringComparison.OrdinalIgnoreCase)
+              && act.Equals("Index", StringComparison.OrdinalIgnoreCase);
+
+    var isCategoryPage = ctrl.Equals("Shop", StringComparison.OrdinalIgnoreCase)
+                         && !string.IsNullOrEmpty(currentCategoryId);
+
+    string Active(string c, string? a = null) =>
+        ctrl.Equals(c, StringComparison.OrdinalIgnoreCase)
+        && (a == null || act.Equals(a, StringComparison.OrdinalIgnoreCase)) ? "active" : "";
+
+    string ActiveCategory(string catId) =>
+        isCategoryPage && currentCategoryId == catId ? "active" : "";
+
+    var currentCategoryName = isCategoryPage
+        ? layoutData?.Categories?.FirstOrDefault(c => c.CategoryId.ToString() == currentCategoryId)?.CategoryName
+        : null;
+
+    var freeShip = $"Miễn phí vận chuyển cho đơn từ {(shop?.FreeShipThreshold ?? 0):N0}đ";
+
+    var userInitial = string.IsNullOrWhiteSpace(layoutData?.UserName)
+        ? "U"
+        : layoutData!.UserName!.Trim()[0].ToString().ToUpperInvariant();
+
+    var wishlistCount = layoutData?.WishlistCount ?? 0;
+    var isAuthenticated = layoutData?.IsAuthenticated == true;
+}
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="description" content="@(shop?.Name) - Cửa hàng thời trang uy tín">
+    <meta name="keywords" content="Fashion, Quần áo, Thời trang, Shop">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>@ViewData["Title"] - @(shop?.Name ?? "Shop")</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@200;300;400;600;900&display=swap" rel="stylesheet">
+    <link rel="icon" type="image/svg+xml" href="~/favicon.svg" />
+    <link rel="stylesheet" href="~/LayoutUser/css/bootstrap.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/font-awesome.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/elegant-icons.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/nice-select.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/jquery-ui.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/owl.carousel.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/slicknav.min.css" type="text/css">
+    <link rel="stylesheet" href="~/LayoutUser/css/style.css" type="text/css" asp-append-version="true">
+</head>
+
+<body>
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Humberger Begin (Mobile Menu) -->
+    <div class="humberger__menu__overlay"></div>
+    <div class="humberger__menu__wrapper">
+        <div class="humberger__menu__logo">
+            <a asp-controller="Home" asp-action="Index"><img src="~/LayoutUser/img/logo.png" alt="@shop?.Name"></a>
+        </div>
+        <div class="humberger__menu__cart">
+            <ul>
+                <li>
+                    <a asp-controller="Favorite" asp-action="Index" title="Sản phẩm yêu thích">
+                        <i class="fa fa-heart"></i> <span class="wishlist-badge">@wishlistCount</span>
+                    </a>
+                </li>
+                <li>
+                    @if (isAuthenticated)
+                    {
+                        <a asp-controller="Cart" asp-action="Index"><i class="fa fa-shopping-bag"></i> <span class="header-cart__badge-mobile">@(layoutData?.CartCount ?? ViewBag.CartCount ?? 0)</span></a>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" onclick="openAuthModal()"><i class="fa fa-shopping-bag"></i> <span>0</span></a>
+                    }
+                </li>
+            </ul>
+            <div class="header__cart__price">
+                @if (isAuthenticated)
+                {
+                    <a asp-controller="Cart" asp-action="Index" class="header__cart__link">
+                        Giỏ hàng: <span>@(((decimal?)(layoutData?.CartTotal ?? ViewBag.CartTotal ?? 0))?.ToString("N0")) đ</span>
+                    </a>
+                }
+                else
+                {
+                    <a href="javascript:void(0)" onclick="openAuthModal()" class="header__cart__link">
+                        Giỏ hàng: <span>0 đ</span>
+                    </a>
+                }
+            </div>
+        </div>
+        <div class="humberger__menu__widget">
+            <div class="header__top__right__announcement">
+                <i class="fa fa-tag text-danger"></i> Giảm @(shop?.FirstOrderDiscountPercent ?? 0)% cho đơn hàng đầu tiên!
+            </div>
+            <div class="header__top__right__auth">
+                @if (isAuthenticated)
+                {
+                    <a href="#"><i class="fa fa-user"></i> @layoutData?.UserName</a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline ml-2">
+                        <button type="submit" class="btn-logout-inline">
+                            <i class="fa fa-sign-out"></i> Đăng xuất
+                        </button>
+                    </form>
+                }
+                else
+                {
+                    <a asp-controller="Account" asp-action="LoginRegister"><i class="fa fa-user"></i> Đăng nhập / Đăng ký</a>
+                }
+            </div>
+        </div>
+        <nav class="humberger__menu__nav mobile-menu">
+            <ul>
+                <li class="@Active("Home", "Index")"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                <li class="@(isCategoryPage ? "" : Active("Shop"))"><a asp-controller="Shop" asp-action="Index">Cửa hàng</a></li>
+                @if (layoutData?.Categories != null)
+                {
+                    foreach (var cat in layoutData.Categories)
+                    {
+                        <li class="@ActiveCategory(cat.CategoryId.ToString())">
+                            <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@cat.CategoryId">&nbsp;&nbsp;› @cat.CategoryName</a>
+                        </li>
+                    }
+                }
+                <li class="@Active("Cart")">
+                    @if (isAuthenticated)
+                    {
+                        <a asp-controller="Cart" asp-action="Index">Giỏ hàng</a>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" onclick="openAuthModal()">Giỏ hàng</a>
+                    }
+                </li>
+                <li class="@Active("Checkout")">
+                    @if (isAuthenticated)
+                    {
+                        <a asp-controller="Checkout" asp-action="Index">Thanh toán</a>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" onclick="openAuthModal()">Thanh toán</a>
+                    }
+                </li>
+                <li class="@Active("Order", "History")">
+                    @if (isAuthenticated)
+                    {
+                        <a asp-controller="Order" asp-action="History">Lịch sử đơn hàng</a>
+                    }
+                    else
+                    {
+                        <a href="javascript:void(0)" onclick="openAuthModal()">Lịch sử đơn hàng</a>
+                    }
+                </li>
+                <li class="@Active("Blog")"><a asp-controller="Blog" asp-action="Index">Bài viết</a></li>
+                <li class="@Active("Favorite")">
+                    <a asp-controller="Favorite" asp-action="Index">Yêu thích (<span class="wishlist-badge">@wishlistCount</span>)</a>
+                </li>
+                <li class="@Active("Contact", "Index")"><a asp-controller="Contact" asp-action="Index">Liên hệ</a></li>
+            </ul>
+        </nav>
+        <div id="mobile-menu-wrap"></div>
+        <div class="header__top__right__social">
+            <a href="@(shop?.Facebook ?? "#")"><i class="fa fa-facebook"></i></a>
+            <a href="@(shop?.Instagram ?? "#")"><i class="fa fa-instagram"></i></a>
+            <a href="@(shop?.TikTok ?? "#")"><i class="fa fa-share-alt"></i></a>
+        </div>
+        <div class="humberger__menu__contact">
+            <ul>
+                <li><i class="fa fa-envelope"></i> @shop?.Email</li>
+                <li>@freeShip</li>
+            </ul>
+        </div>
+    </div>
+    <!-- Humberger End -->
+    <!-- Header Section Begin -->
+    <header class="header">
+        <div class="header__top">
+            <div class="container-fluid header-wide">
+                <div class="topbar">
+                    <ul class="topbar__info">
+                        <li><i class="fa fa-envelope-o"></i><span>@shop?.Email</span></li>
+                        <li class="topbar__promo"><i class="fa fa-gift"></i><span>@freeShip</span></li>
+                    </ul>
+
+                    <div class="topbar__search">
+                        <form asp-controller="Shop" asp-action="Search" method="get">
+                            <input type="text" name="query" placeholder="Tìm kiếm trang phục, phụ kiện...">
+                            <button type="submit" title="Tìm kiếm"><i class="fa fa-search"></i></button>
+                        </form>
+                    </div>
+
+                    <div class="topbar__actions">
+                        <div class="topbar__social">
+                            <a href="@(shop?.Facebook ?? "#")" aria-label="Facebook"><i class="fa fa-facebook"></i></a>
+                            <a href="@(shop?.Instagram ?? "#")" aria-label="Instagram"><i class="fa fa-instagram"></i></a>
+                            <a href="@(shop?.TikTok ?? "#")" aria-label="TikTok"><i class="fa fa-share-alt"></i></a>
+                        </div>
+
+                        <span class="topbar__divider"></span>
+
+                        <a class="topbar__hotline" href="tel:@(shop?.Phone?.Replace(" ", ""))" title="Hotline hỗ trợ khách hàng 24/7">
+                            <span class="topbar__hotline-icon"><i class="fa fa-phone"></i></span>
+                            <span class="topbar__hotline-text">
+                                <small>Hotline 24/7</small>
+                                <strong>@shop?.Phone</strong>
+                            </span>
+                        </a>
+
+                        <span class="topbar__divider"></span>
+
+                        <a class="topbar__link" asp-controller="Order" asp-action="TrackOrder">
+                            <i class="fa fa-truck"></i> Tra cứu đơn hàng
+                        </a>
+
+                        <span class="topbar__divider"></span>
+
+                        @if (isAuthenticated)
+                        {
+                            <a href="#" class="topbar__user" title="@layoutData?.UserName">
+                                <span class="topbar__avatar">@userInitial</span>
+                                <span class="topbar__username">@layoutData?.UserName</span>
+                            </a>
+                            <form asp-controller="Account" asp-action="Logout" method="post" class="topbar__form">
+                                <button type="submit" class="topbar__logout"><i class="fa fa-sign-out"></i> Đăng xuất</button>
+                            </form>
+                        }
+                        else
+                        {
+                            <a class="topbar__btn" asp-controller="Account" asp-action="LoginRegister"><i class="fa fa-sign-in"></i> Đăng nhập</a>
+                            <a class="topbar__btn topbar__btn--solid" asp-controller="Account" asp-action="LoginRegister"><i class="fa fa-user-plus"></i> Đăng ký</a>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="container-fluid header-wide">
+            <div class="header-main">
+                <div class="header__logo">
+                    <a asp-controller="Home" asp-action="Index"><img src="~/LayoutUser/img/logo.png" alt="@shop?.Name"></a>
+                </div>
+
+                <nav class="header__menu">
+                    <ul>
+                        <li class="@Active("Home", "Index")"><a asp-controller="Home" asp-action="Index">Trang chủ</a></li>
+                        <li class="@(isCategoryPage ? "" : Active("Shop"))"><a asp-controller="Shop" asp-action="Index">Cửa hàng</a></li>
+                        <li class="has-dropdown @(isCategoryPage ? "active" : "")" id="categoryMenu">
+                            <a href="javascript:void(0)" id="categoryToggle">
+                                @(currentCategoryName ?? "Danh mục") <span class="arrow_carrot-down"></span>
+                            </a>
+                            <ul class="header__menu__dropdown">
+                                <li class="dropdown-header-title">
+                                    <i class="fa fa-bars"></i> Danh mục sản phẩm
+                                </li>
+                                @if (layoutData?.Categories != null)
+                                {
+                                    foreach (var cat in layoutData.Categories)
+                                    {
+                                        <li class="@ActiveCategory(cat.CategoryId.ToString())">
+                                            <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@cat.CategoryId">@cat.CategoryName</a>
+                                        </li>
+                                    }
+                                }
+                            </ul>
+                        </li>
+                        <li class="@Active("Blog")"><a asp-controller="Blog" asp-action="Index">Bài viết</a></li>
+                        <li class="@Active("Favorite")">
+                            <a asp-controller="Favorite" asp-action="Index">
+                                Yêu thích<span class="nav-badge wishlist-badge">@wishlistCount</span>
+                            </a>
+                        </li>
+                        <li class="@Active("Checkout")">
+                            @if (isAuthenticated)
+                            {
+                                <a asp-controller="Checkout" asp-action="Index">Thanh toán</a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" onclick="openAuthModal()">Thanh toán</a>
+                            }
+                        </li>
+                        <li class="@Active("Order", "History")">
+                            @if (isAuthenticated)
+                            {
+                                <a asp-controller="Order" asp-action="History">Lịch sử đơn hàng</a>
+                            }
+                            else
+                            {
+                                <a href="javascript:void(0)" onclick="openAuthModal()">Lịch sử đơn hàng</a>
+                            }
+                        </li>
+                        <li class="@Active("Contact", "Index")"><a asp-controller="Contact" asp-action="Index">Liên hệ</a></li>
+                    </ul>
+                </nav>
+
+                <div class="header-cart">
+                    @if (isAuthenticated)
+                    {
+                        <a class="header-cart__btn" asp-controller="Cart" asp-action="Index" title="Xem giỏ hàng">
+                            <span class="header-cart__icon">
+                                <i class="fa fa-shopping-bag"></i>
+                                <span class="header-cart__badge">@(layoutData?.CartCount ?? ViewBag.CartCount ?? 0)</span>
+                            </span>
+                            <span class="header-cart__text">
+                                <small>Giỏ hàng</small>
+                                <strong>@(((decimal?)(layoutData?.CartTotal ?? ViewBag.CartTotal ?? 0))?.ToString("N0")) đ</strong>
+                            </span>
+                        </a>
+                    }
+                    else
+                    {
+                        <a class="header-cart__btn" href="javascript:void(0)" onclick="openAuthModal()" title="Xem giỏ hàng">
+                            <span class="header-cart__icon">
+                                <i class="fa fa-shopping-bag"></i>
+                                <span class="header-cart__badge">0</span>
+                            </span>
+                            <span class="header-cart__text">
+                                <small>Giỏ hàng</small>
+                                <strong>0 đ</strong>
+                            </span>
+                        </a>
+                    }
+                </div>
+            </div>
+            <div class="humberger__open">
+                <i class="fa fa-bars"></i>
+            </div>
+        </div>
+    </header>
+    <!-- Header Section End -->
+    <!-- RAIL TRÁI -->
+    <aside class="site-rail site-rail--left" id="railLeft" aria-label="Danh mục sản phẩm">
+        <div class="site-rail__title">
+            <i class="fa fa-bars"></i>
+            <span>Danh mục sản phẩm</span>
+        </div>
+
+        <ul class="site-rail__cats">
+            @if (layoutData?.Categories != null)
+            {
+                foreach (var cat in layoutData.Categories)
+                {
+                    <li class="@ActiveCategory(cat.CategoryId.ToString())">
+                        <a asp-controller="Shop" asp-action="Index" asp-route-categoryId="@cat.CategoryId">
+                            <span>@cat.CategoryName</span>
+                            <i class="fa fa-angle-right"></i>
+                        </a>
+                    </li>
+                }
+            }
+        </ul>
+    </aside>
+
+    <!-- RAIL PHẢI -->
+    <aside class="site-rail site-rail--right" id="railRight" aria-label="Quảng cáo">
+        <div class="site-rail__ads">
+            <div class="site-rail__ads-label">Quảng cáo</div>
+
+            <a class="rail-ad rail-ad--sale" asp-controller="Shop" asp-action="Index">
+                <span class="rail-ad__tag">HOT</span>
+                <strong>SALE đến 50%</strong>
+                <span>Bộ sưu tập Thu Đông mới nhất</span>
+                <em>Mua ngay <i class="fa fa-arrow-right"></i></em>
+            </a>
+
+            <a class="rail-ad rail-ad--ship" asp-controller="Shop" asp-action="Index">
+                <i class="fa fa-truck rail-ad__icon"></i>
+                <strong>FREESHIP</strong>
+                <span>@freeShip</span>
+            </a>
+
+            <a class="rail-ad rail-ad--voucher" asp-controller="Shop" asp-action="Index">
+                <i class="fa fa-gift rail-ad__icon"></i>
+                <strong>Giảm @(shop?.FirstOrderDiscountPercent ?? 0)%</strong>
+                <span>cho đơn hàng đầu tiên của bạn</span>
+            </a>
+
+            <a class="rail-ad rail-ad--return" asp-controller="Shop" asp-action="Index">
+                <i class="fa fa-refresh rail-ad__icon"></i>
+                <strong>ĐỔI TRẢ 30 NGÀY</strong>
+                <span>Yên tâm mua sắm, không lo size</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- NỘI DUNG CHÍNH -->
+    <div class="page-main" id="pageMain">
+        <!-- HERO SECTION -->
+        <section class="hero @(isHome ? "" : "hero-normal")">
+            <div class="container-fluid header-wide">
+                @if (isHome)
+                {
+                    <div class="hero__item set-bg" data-setbg="@Url.Content("~/LayoutUser/img/hero/banner-main.jpg")">
+                        <div class="hero__text">
+                            <span>BỘ SƯU TẬP MỚI NHẤT</span>
+                            <h2>Thời Trang Cao Cấp <br />100% Cotton</h2>
+                            <p>Giao hàng tận nơi & Đổi trả dễ dàng</p>
+                           <a asp-controller="Shop" asp-action="Index" class="site-btn" style="border-radius: 6px; padding: 12px 30px; font-weight: bold; background-color: #7fad39; transition: all 0.3s;">XEM NGAY</a>
+                        </div>
+                    </div>
+                }
+            </div>
+        </section>
+
+        <!-- NỘI DUNG CHÍNH CĂN LỀ GIỐNG BANNER -->
+        <div class="main-content-wrapper container-fluid header-wide">
+            @RenderBody()
+        </div>
+
+        <!-- Footer Section Begin -->
+        <footer class="footer spad">
+            <div class="container">
+                <div class="row">
+                    <div class="col-lg-3 col-md-6 col-sm-6">
+                        <div class="footer__about">
+                            <div class="footer__about__logo">
+                                <a asp-controller="Home" asp-action="Index"><img src="~/LayoutUser/img/logo.png" alt="@shop?.Name"></a>
+                            </div>
+                            <ul>
+                                <li>Địa chỉ: @shop?.Address</li>
+                                <li>Điện thoại: @shop?.Phone</li>
+                                <li>Email: @shop?.Email</li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-6 col-sm-6 offset-lg-1">
+                        <div class="footer__widget">
+                            <h6>Thông tin shop</h6>
+                            <ul>
+                                <li><a href="#">Về chúng tôi</a></li>
+                                <li><a href="#">Chính sách giao hàng</a></li>
+                                <li><a href="#">Chính sách bảo mật</a></li>
+                                <li><a href="#">Hướng dẫn chọn size</a></li>
+                            </ul>
+                            <ul>
+                                <li><a href="#">Điều khoản dịch vụ</a></li>
+                                <li><a href="#">Liên hệ hỗ trợ</a></li>
+                                <li><a href="#">Hệ thống cửa hàng</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-md-12">
+                        <div class="footer__widget">
+                            <h6>Nhận ưu đãi từ cửa hàng</h6>
+                            <p>Đăng ký email để nhận mã giảm giá và cập nhật mẫu mới nhất.</p>
+                            <form action="#">
+                                <input type="email" placeholder="Nhập email của bạn">
+                                <button type="submit" class="site-btn">Đăng ký</button>
+                            </form>
+                            <div class="footer__widget__social">
+                                <a href="@(shop?.Facebook ?? "#")"><i class="fa fa-facebook"></i></a>
+                                <a href="@(shop?.Instagram ?? "#")"><i class="fa fa-instagram"></i></a>
+                                <a href="@(shop?.TikTok ?? "#")"><i class="fa fa-share-alt"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-12">
+                        <div class="footer__copyright">
+                            <div class="footer__copyright__text">
+                                <p>Copyright &copy; @DateTime.Now.Year Bản quyền thuộc về @shop?.Name.</p>
+                            </div>
+                            <div class="footer__copyright__payment"><img src="~/LayoutUser/img/payment-item.png" alt="Phương thức thanh toán"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </footer>
+        <!-- Footer Section End -->
+    </div>
+
+    <!-- DIALOG ĐĂNG NHẬP CHO KHÁCH VÃNG LAI -->
+    <div class="modal fade" id="authRequiredModal" tabindex="-1" role="dialog" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content auth-dialog-card">
+                <div class="auth-dialog-header">
+                    <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                    <h5>Yêu Cầu Đăng Nhập</h5>
+                </div>
+                <div class="auth-dialog-body">
+                    <div class="auth-dialog-icon">
+                        <i class="fa fa-shopping-basket"></i>
+                    </div>
+                    <h6 class="font-weight-bold mb-2">Bạn cần tài khoản để mua sắm</h6>
+                    <p class="text-muted small mb-4">Vui lòng đăng nhập hoặc tạo tài khoản mới để thực hiện các chức năng xem và thêm sản phẩm vào giỏ hàng.</p>
+
+                    <a asp-controller="Account" asp-action="LoginRegister" class="btn btn-dialog-login">
+                        <i class="fa fa-sign-in mr-1"></i> Đăng nhập ngay
+                    </a>
+                    <a asp-controller="Account" asp-action="LoginRegister" class="btn btn-dialog-register">
+                        <i class="fa fa-user-plus mr-1"></i> Tạo tài khoản mới
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="~/LayoutUser/js/jquery-3.3.1.min.js"></script>
+    <script src="~/LayoutUser/js/bootstrap.min.js"></script>
+    <script src="~/LayoutUser/js/jquery.nice-select.min.js"></script>
+    <script src="~/LayoutUser/js/jquery-ui.min.js"></script>
+    <script src="~/LayoutUser/js/jquery.slicknav.js"></script>
+    <script src="~/LayoutUser/js/mixitup.min.js"></script>
+    <script src="~/LayoutUser/js/owl.carousel.min.js"></script>
+    <script src="~/LayoutUser/js/main.js"></script>
+    <script>
+        var isAuthenticated = '@(isAuthenticated ? "true" : "false")' === 'true';
+
+        function openAuthModal() {
+            $('#authRequiredModal').modal('show');
+        }
+
+        function hidePreloader() {
+            var p = document.getElementById('preloder');
+            if (p) p.style.display = 'none';
+        }
+        window.addEventListener('load', hidePreloader);
+        setTimeout(hidePreloader, 3000);
+
+        (function () {
+            var rails = document.querySelectorAll('.site-rail');
+            var header = document.querySelector('header.header');
+            var pageMain = document.getElementById('pageMain');
+            if (!header || !pageMain) return;
+
+            function layoutAdjust() {
+                if (window.innerWidth >= 1200) {
+                    var headerHeight = header.offsetHeight;
+                    rails.forEach(function (r) {
+                        r.style.top = headerHeight + 'px';
+                    });
+                    pageMain.style.top = headerHeight + 'px';
+                } else {
+                    rails.forEach(function (r) {
+                        r.style.top = '';
+                    });
+                    pageMain.style.top = '';
+                }
+            }
+
+            window.addEventListener('resize', layoutAdjust);
+            window.addEventListener('load', layoutAdjust);
+            layoutAdjust();
+        })();
+
+        (function () {
+            var menu = document.getElementById('categoryMenu');
+            var toggle = document.getElementById('categoryToggle');
+            if (!menu || !toggle) return;
+
+            toggle.addEventListener('click', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                menu.classList.toggle('open');
+            });
+
+            document.addEventListener('click', function (e) {
+                if (!menu.contains(e.target)) menu.classList.remove('open');
+            });
+        })();
+
+        window.addEventListener('load', function () {
+            var pageMain = document.getElementById('pageMain');
+            if (pageMain) pageMain.scrollTop = 0;
+
+            var activeCat = document.querySelector('.site-rail--left .site-rail__cats li.active');
+            if (activeCat) activeCat.scrollIntoView({ block: 'nearest' });
+        });
+
+        // Thêm vào giỏ hàng bằng AJAX
+        $(document).on('click', '.ajax-add-to-cart', function (e) {
+            e.preventDefault();
+            var productId = $(this).data('id');
+
+            if (!isAuthenticated) {
+                if (typeof openAuthModal === 'function') {
+                    openAuthModal();
+                }
+                return;
+            }
+
+            $.ajax({
+                url: '/Cart/AddToCart',
+                type: 'POST',
+                data: { id: productId, quantity: 1 },
+                success: function (response) {
+                    if (response.success) {
+                        $('.header-cart__badge, .header-cart__badge-mobile').text(response.cartCount);
+                        $('.header-cart__text strong').text(response.cartTotal);
+
+                        // HIỆN TOAST THÔNG BÁO Ở GÓC PHẢI
+                        showOganiToast("Đã thêm sản phẩm vào giỏ hàng thành công!");
+                    } else {
+                        alert(response.message || "Có lỗi xảy ra.");
+                    }
+                },
+                error: function () {
+                    alert("Vui lòng đăng nhập để sử dụng tính năng này.");
+                    if (typeof openAuthModal === 'function') {
+                        openAuthModal();
+                    }
+                }
+            });
+        });
+
+        // Đồng bộ số lượng và trạng thái nút Trái tim khi tải trang
+        $(document).ready(function () {
+            $.get('/Favorite/GetInfo', function (res) {
+                if (res && typeof res.count !== 'undefined') {
+                    $('.wishlist-badge').text(res.count);
+                    if (res.ids && res.ids.length > 0) {
+                        $('.ajax-toggle-favorite').each(function () {
+                            var id = String($(this).data('id'));
+                            if (res.ids.indexOf(id) !== -1) {
+                                $(this).addClass('active-fav');
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        // Bấm nút Trái tim ở Home hoặc Shop để Thêm/Bỏ yêu thích
+        $(document).on('click', '.ajax-toggle-favorite', function (e) {
+            e.preventDefault();
+            var $btn = $(this);
+            var productId = $btn.data('id');
+
+            $.ajax({
+                url: '/Favorite/Toggle',
+                type: 'POST',
+                data: { id: productId },
+                success: function (response) {
+                    if (response.success) {
+                        $('.wishlist-badge').text(response.wishlistCount);
+                        $('.ajax-toggle-favorite[data-id="' + productId + '"]').toggleClass('active-fav', response.isAdded);
+
+                        // HIỆN TOAST THÔNG BÁO TÙY THEO TRẠNG THÁI THÊM/XÓA
+                        var msg = response.isAdded ? "Đã thêm vào danh sách yêu thích!" : "Đã xóa khỏi danh sách yêu thích!";
+                        showOganiToast(msg);
+                    }
+                }
+            });
+        });
+
+        // Bấm nút Xóa khỏi danh sách ngay tại trang Favorite/Index
+        $(document).on('click', '.ajax-remove-favorite', function (e) {
+            e.preventDefault();
+            var productId = $(this).data('id');
+
+            $.ajax({
+                url: '/Favorite/Remove',
+                type: 'POST',
+                data: { id: productId },
+                success: function (response) {
+                    if (response.success) {
+                        $('.wishlist-badge').text(response.wishlistCount);
+                        $('#favPageCount').text(response.wishlistCount);
+                        $('#fav-item-' + productId).fadeOut(250, function () {
+                            $(this).remove();
+                            if ($('.favorite-card-item').length === 0) {
+                                $('#favoriteContainer').html(
+                                    '<div class="col-12" id="emptyFavoriteBox">' +
+                                        '<div class="checkout-card co-empty">' +
+                                            '<i class="fa fa-heart-o"></i>' +
+                                            '<p>Danh sách yêu thích của bạn đang trống. Hãy thả tim các sản phẩm bạn ưng ý nhé!</p>' +
+                                            '<a href="/Shop">Khám phá cửa hàng</a>' +
+                                        '</div>' +
+                                    '</div>'
+                                );
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+        // Hàm điều khiển hiển thị Toast
+        function showOganiToast(message) {
+            var $toast = $('#ogani-toast');
+            $('#ogani-toast-message').text(message);
+            $toast.addClass('show');
+
+            // Tự động ẩn sau 2.5 giây
+            setTimeout(function () {
+                $toast.removeClass('show');
+            }, 2500);
+        }
+    </script>
+    @await RenderSectionAsync("Scripts", required: false)
+
+    <!-- Toast thông báo góc phải màn hình -->
+    <div id="ogani-toast" class="ogani-toast">
+        <i class="fa fa-check-circle"></i>
+        <span id="ogani-toast-message">Thêm vào giỏ hàng thành công!</span>
+    </div>
+
+    <style>
+        /* CSS cho Toast thông báo */
+        .ogani-toast {
+            position: fixed;
+            bottom: 30px;
+            right: -300px;
+            z-index: 9999;
+            background: #1c1c1c;
+            color: #ffffff;
+            padding: 14px 22px;
+            border-radius: 8px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-family: "Cairo", sans-serif;
+            font-size: 14px;
+            font-weight: 600;
+            transition: right 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.35);
+            border-left: 4px solid #7fad39;
+        }
+
+            .ogani-toast.show {
+                right: 30px;
+            }
+
+            .ogani-toast i {
+                color: #7fad39;
+                font-size: 18px;
+            }
+    </style>
+</body>
+</html>

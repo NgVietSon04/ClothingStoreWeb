@@ -1,0 +1,29 @@
+@model PagedList<Cart>
+@{
+    ViewData["Title"] = "Giỏ hàng";
+}
+<div class="page-head"><div><h1><i class="bi bi-cart3"></i> Giỏ hàng</h1><p class="text-muted mb-0">Tổng cộng @Model.TotalItems giỏ</p></div></div>
+<div class="card"><div class="card-body">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-5"><input name="q" value="@ViewBag.Q" class="form-control" placeholder="Mã giỏ, tài khoản..." /></div>
+        <div class="col-auto"><button class="btn btn-outline-secondary"><i class="bi bi-search"></i> Tìm</button></div>
+    </form>
+    <div class="table-responsive"><table class="table table-hover align-middle">
+        <thead><tr><th>Mã giỏ</th><th>Tài khoản</th><th>Số dòng</th><th>Ngày tạo</th><th>Cập nhật</th><th class="text-end">Thao tác</th></tr></thead>
+        <tbody>
+        @foreach (var c in Model.Items)
+        {
+            <tr>
+                <td>@c.CartId</td><td>@c.Username</td><td>@c.CartDetails.Count</td>
+                <td>@c.CreatedDate?.ToString("dd/MM/yyyy HH:mm")</td><td>@c.UpdatedDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                <td class="text-end text-nowrap">
+                    <a asp-action="Details" asp-route-id="@c.CartId" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                    <button type="button" class="btn btn-sm btn-outline-danger" data-delete-url="@Url.Action("Delete", new { id = c.CartId })" data-delete-name="giỏ @c.CartId"><i class="bi bi-trash"></i></button>
+                </td>
+            </tr>
+        }
+        @if (!Model.Items.Any()) { <tr><td colspan="6" class="text-center text-muted py-4">Chưa có giỏ hàng</td></tr> }
+        </tbody>
+    </table></div>
+    <partial name="_Pager" model="Model" />
+</div></div>

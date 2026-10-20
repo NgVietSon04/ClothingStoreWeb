@@ -1,0 +1,85 @@
+@model Promotion
+@{
+    var isEdit = ViewContext.RouteData.Values["action"]?.ToString() == "Edit";
+    ViewData["Title"] = (isEdit ? "Sửa " : "Thêm ") + "khuyến mãi";
+}
+
+<div class="page-head">
+    <h1><i class="bi bi-ticket-perforated"></i> @ViewData["Title"]</h1>
+    <a asp-action="Index" class="btn btn-outline-secondary"><i class="bi bi-arrow-left"></i> Quay lại</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data"
+              action="@(isEdit ? Url.Action("Edit", new { id = Model.PromotionId }) : Url.Action("Create"))">
+            @Html.AntiForgeryToken()
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger"></div>
+            <div class="row g-3">
+        @if (isEdit)
+        {
+            <div class="col-md-6">
+                <label class="form-label">Mã KM</label>
+                <input class="form-control" value="@Model.PromotionId" readonly />
+            </div>
+        }
+        <div class="col-md-6">
+            <label class="form-label">Mã giảm giá (Code) <span class="text-danger">*</span></label>
+            <input asp-for="Code" class="form-control" />
+            <span asp-validation-for="Code" class="text-danger small"></span>
+        </div>
+        <div class="col-12">
+            <label class="form-label">Mô tả</label>
+            <textarea asp-for="Description" rows="3" class="form-control"></textarea>
+            <span asp-validation-for="Description" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Loại giảm <span class="text-danger">*</span></label>
+            <select asp-for="DiscountType" asp-items="@(ViewBag.DiscountTypeOptions as IEnumerable<SelectListItem>)" class="form-select">
+                <option value="">-- Chọn --</option>
+            </select>
+            <span asp-validation-for="DiscountType" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Giá trị giảm <span class="text-danger">*</span></label>
+            <input asp-for="DiscountValue" type="number" step="any" class="form-control" />
+            <span asp-validation-for="DiscountValue" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Đơn tối thiểu (₫)</label>
+            <input asp-for="MinOrderValue" type="number" step="any" class="form-control" />
+            <span asp-validation-for="MinOrderValue" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Giảm tối đa (₫)</label>
+            <input asp-for="MaxDiscountAmount" type="number" step="any" class="form-control" />
+            <span asp-validation-for="MaxDiscountAmount" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Bắt đầu <span class="text-danger">*</span></label>
+            <input asp-for="StartDate" class="form-control" />
+            <span asp-validation-for="StartDate" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Kết thúc <span class="text-danger">*</span></label>
+            <input asp-for="EndDate" class="form-control" />
+            <span asp-validation-for="EndDate" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Giới hạn lượt dùng</label>
+            <input asp-for="UsageLimit" type="number" step="1" class="form-control" />
+            <span asp-validation-for="UsageLimit" class="text-danger small"></span>
+        </div>
+        <div class="col-md-6">
+            <label class="form-label">Đã dùng</label>
+            <input asp-for="UsedCount" type="number" step="1" class="form-control" />
+            <span asp-validation-for="UsedCount" class="text-danger small"></span>
+        </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button type="submit" class="btn btn-primary"><i class="bi bi-check-lg"></i> Lưu</button>
+                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+            </div>
+        </form>
+    </div>
+</div>

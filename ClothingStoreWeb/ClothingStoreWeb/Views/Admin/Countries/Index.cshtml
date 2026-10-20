@@ -1,0 +1,62 @@
+@model PagedList<Country>
+@{
+    ViewData["Title"] = "Quốc gia";
+}
+
+<div class="page-head">
+    <div>
+        <h1><i class="bi bi-globe"></i> Quốc gia</h1>
+        <p class="text-muted mb-0">Tổng cộng @Model.TotalItems bản ghi</p>
+    </div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Thêm mới</a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="get" class="row g-2 mb-3">
+            <div class="col-md-5">
+                <input name="q" value="@ViewBag.Q" class="form-control" placeholder="Tìm kiếm..." />
+            </div>
+            <div class="col-auto">
+                <button class="btn btn-outline-secondary" type="submit"><i class="bi bi-search"></i> Tìm</button>
+                @if (!string.IsNullOrEmpty((string?)ViewBag.Q))
+                {
+                    <a asp-action="Index" class="btn btn-link">Xóa lọc</a>
+                }
+            </div>
+        </form>
+
+        <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead>
+                    <tr>
+                        <th>Mã quốc gia</th>
+                        <th>Tên quốc gia</th>
+                        <th class="text-end">Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <tr>
+                            <td>@item.CountryId</td>
+                            <td>@item.CountryName</td>
+                            <td class="text-end text-nowrap">
+                                <a asp-action="Edit" asp-route-id="@item.CountryId" class="btn btn-sm btn-outline-primary" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                <button type="button" class="btn btn-sm btn-outline-danger" title="Xóa"
+                                        data-delete-url="@Url.Action("Delete", new { id = item.CountryId })"
+                                        data-delete-name="@item.CountryName"><i class="bi bi-trash"></i></button>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.Items.Any())
+                    {
+                        <tr><td colspan="3" class="text-center text-muted py-4">Chưa có dữ liệu</td></tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <partial name="_Pager" model="Model" />
+    </div>
+</div>

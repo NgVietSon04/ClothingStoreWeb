@@ -1,0 +1,47 @@
+@model PagedList<Order>
+@{
+    ViewData["Title"] = "Đơn hàng";
+}
+<div class="page-head">
+    <div><h1><i class="bi bi-receipt"></i> Đơn hàng</h1><p class="text-muted mb-0">Tổng cộng @Model.TotalItems đơn</p></div>
+    <a asp-action="Create" class="btn btn-primary"><i class="bi bi-plus-lg"></i> Tạo đơn hàng</a>
+</div>
+<div class="card"><div class="card-body">
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-3"><input name="q" value="@ViewBag.Q" class="form-control" placeholder="Mã đơn, mã/tên khách..." /></div>
+        <div class="col-md-2">
+            <select name="payment" class="form-select">
+                <option value="">Mọi hình thức TT</option>
+                @foreach (var p in AdminUi.PaymentMethods) { <option value="@p.Value" selected="@((string?)ViewBag.Payment == p.Value)">@p.Text</option> }
+            </select>
+        </div>
+        <div class="col-md-2"><input type="date" name="fromDate" value="@ViewBag.FromDate" class="form-control" title="Từ ngày" /></div>
+        <div class="col-md-2"><input type="date" name="toDate" value="@ViewBag.ToDate" class="form-control" title="Đến ngày" /></div>
+        <div class="col-auto"><button class="btn btn-outline-secondary"><i class="bi bi-search"></i> Lọc</button> <a asp-action="Index" class="btn btn-link">Xóa lọc</a></div>
+    </form>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead><tr><th>Mã đơn</th><th>Ngày đặt</th><th>Khách hàng</th><th>Nhân viên</th><th>Thanh toán</th><th class="text-end">Tổng tiền</th><th class="text-end">Thao tác</th></tr></thead>
+            <tbody>
+            @foreach (var o in Model.Items)
+            {
+                <tr>
+                    <td><a asp-action="Details" asp-route-id="@o.OrderId">@o.OrderId</a></td>
+                    <td>@o.OrderDate?.ToString("dd/MM/yyyy HH:mm")</td>
+                    <td>@(o.Customer?.FullName ?? "Khách lẻ")</td>
+                    <td>@o.Employee?.FullName</td>
+                    <td>@AdminUi.Payment(o.PaymentMethod)</td>
+                    <td class="text-end">@AdminUi.Money(o.TotalAmount)</td>
+                    <td class="text-end text-nowrap">
+                        <a asp-action="Details" asp-route-id="@o.OrderId" class="btn btn-sm btn-outline-secondary"><i class="bi bi-eye"></i></a>
+                        <a asp-action="Edit" asp-route-id="@o.OrderId" class="btn btn-sm btn-outline-primary"><i class="bi bi-pencil"></i></a>
+                        <button type="button" class="btn btn-sm btn-outline-danger" data-delete-url="@Url.Action("Delete", new { id = o.OrderId })" data-delete-name="đơn @o.OrderId"><i class="bi bi-trash"></i></button>
+                    </td>
+                </tr>
+            }
+            @if (!Model.Items.Any()) { <tr><td colspan="7" class="text-center text-muted py-4">Chưa có đơn hàng</td></tr> }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="Model" />
+</div></div>
